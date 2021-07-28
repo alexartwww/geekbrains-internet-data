@@ -50,7 +50,7 @@ if __name__ == '__main__':
         'Authorization': ''
     }
     data = {
-        'text': 'hello world'
+        'text': 'I\'m gonna tell you funny thing! That\'s simple idea - computer will hack your brain!'
     }
     req = requests.post(url, headers=headers, data=json.dumps(data), auth=requests.auth.HTTPBasicAuth('apikey', credentials['apikey']))
     if req.status_code != 200:
