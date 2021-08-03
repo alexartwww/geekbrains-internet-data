@@ -7,6 +7,7 @@ import json
 from bs4 import BeautifulSoup as bs
 import csv
 from pymongo import MongoClient
+import random
 
 task = '''
 1. Развернуть у себя на компьютере/виртуальной машине/хостинге MongoDB и реализовать функцию,
@@ -26,29 +27,41 @@ def hhSearchParser(url, html):
     blocks = soup.find_all('div', {"class": "vacancy-serp-item"})
 
     for block in blocks:
-        vacancy = {'name': '', 'link': '', 'compensation': None, 'min': None, 'max': None, 'currency': None}
+        vacancy = {
+            'id': 'hh-' + str(random.randint(1000000000, 9999999999)),
+            'name': '',
+            'link': '',
+            'compensation': None,
+            'min': None,
+            'max': None,
+            'currency': None
+        }
         title = block.find('a', {"data-qa": "vacancy-serp__vacancy-title"})
         if title:
             vacancy['name'] = str(title.text)
             vacancy['link'] = urllib.parse.urljoin(url, str(title['href']))
+            id = re.search('hh\.ru/vacancy/(\d+).*?$', vacancy['link'])
+            if id:
+                vacancy['id'] = 'hh-' + str(id.group(1))
         compensation = block.find('span', {"data-qa": "vacancy-serp__vacancy-compensation"})
         if compensation:
-            vacancy['compensation'] = str(compensation.text).replace('\u202f','')
+            vacancy['compensation'] = str(compensation.text).replace('\u202f', '')
             matchFromTo = re.search('([\d\ ]+)–([\d\ ]+)([\S]+)', vacancy['compensation'])
             matchFrom = re.search('от ([\d\ ]+)([\S]+)', vacancy['compensation'])
             matchTo = re.search('до ([\d\ ]+)([\S]+)', vacancy['compensation'])
             if matchFromTo:
-                vacancy['min'] = str(matchFromTo.group(1)).replace(' ', '')
-                vacancy['max'] = str(matchFromTo.group(2)).replace(' ', '')
+                vacancy['min'] = int(str(matchFromTo.group(1)).replace(' ', ''))
+                vacancy['max'] = int(str(matchFromTo.group(2)).replace(' ', ''))
                 vacancy['currency'] = str(matchFromTo.group(3)).replace(' ', '')
             elif matchFrom:
-                vacancy['min'] = str(matchFrom.group(1)).replace(' ', '')
+                vacancy['min'] = int(str(matchFrom.group(1)).replace(' ', ''))
                 vacancy['currency'] = str(matchFrom.group(2)).replace(' ', '')
             elif matchTo:
-                vacancy['max'] = str(matchTo.group(1)).replace(' ', '')
+                vacancy['max'] = int(str(matchTo.group(1)).replace(' ', ''))
                 vacancy['currency'] = str(matchTo.group(2)).replace(' ', '')
         vacancies.append(vacancy)
     return vacancies
+
 
 def sjSearchParser(url, html):
     vacancies = []
@@ -56,27 +69,38 @@ def sjSearchParser(url, html):
     blocks = soup.find_all('div', class_="f-test-vacancy-item")
 
     for block in blocks:
-        vacancy = {'name': '', 'link': '', 'compensation': None, 'min': None, 'max': None, 'currency': None}
+        vacancy = {
+            'id': 'sj-' + str(random.randint(1000000000, 9999999999)),
+            'name': '',
+            'link': '',
+            'compensation': None,
+            'min': None,
+            'max': None,
+            'currency': None
+        }
         title = block.find('a', class_=re.compile(r'^f-test-link'))
         if title:
             vacancy['name'] = str(title.text)
             vacancy['link'] = urllib.parse.urljoin(url, str(title['href']))
+            id = re.search('-(\d+)\.html.*?$', vacancy['link'])
+            if id:
+                vacancy['id'] = 'sj-' + str(id.group(1))
         compensation = block.find('span', class_="f-test-text-company-item-salary")
         if compensation:
-            vacancy['compensation'] = str(''.join(compensation.findAll(text=True))).replace('\xa0','')
+            vacancy['compensation'] = str(''.join(compensation.findAll(text=True))).replace('\xa0', '')
             matchFromTo = re.search('([\d\ ]+)—([\d\ ]+)([\S]+)', vacancy['compensation'])
             matchFrom = re.search('от ([\d\ ]+)([\S]+)', vacancy['compensation'])
             matchTo = re.search('до ([\d\ ]+)([\S]+)', vacancy['compensation'])
             if matchFromTo:
-                vacancy['min'] = str(matchFromTo.group(1)).replace(' ', '')
-                vacancy['max'] = str(matchFromTo.group(2)).replace(' ', '')
-                vacancy['currency'] = str(matchFromTo.group(3)).replace(' ', '').replace('/месяц','')
+                vacancy['min'] = int(str(matchFromTo.group(1)).replace(' ', ''))
+                vacancy['max'] = int(str(matchFromTo.group(2)).replace(' ', ''))
+                vacancy['currency'] = str(matchFromTo.group(3)).replace(' ', '').replace('/месяц', '')
             elif matchFrom:
-                vacancy['min'] = str(matchFrom.group(1)).replace(' ', '')
-                vacancy['currency'] = str(matchFrom.group(2)).replace(' ', '').replace('/месяц','')
+                vacancy['min'] = int(str(matchFrom.group(1)).replace(' ', ''))
+                vacancy['currency'] = str(matchFrom.group(2)).replace(' ', '').replace('/месяц', '')
             elif matchTo:
-                vacancy['max'] = str(matchTo.group(1)).replace(' ', '')
-                vacancy['currency'] = str(matchTo.group(2)).replace(' ', '').replace('/месяц','')
+                vacancy['max'] = int(str(matchTo.group(1)).replace(' ', ''))
+                vacancy['currency'] = str(matchTo.group(2)).replace(' ', '').replace('/месяц', '')
         vacancies.append(vacancy)
     return vacancies
 
@@ -92,6 +116,12 @@ class Spider():
         self.headers = {}
         self.data = []
         self.downloadLimit = None
+        self.connectionString = 'mongodb://root:eeB5vu7aaiwie9Wo@127.0.0.1:27117'
+        self.dbName = 'geekbrains'
+        self.addDataHandler = None
+
+    def setDataHandler(self, dataHandler):
+        self.addDataHandler = dataHandler
 
     def setDownloadLimit(self, downloadLimit):
         self.downloadLimit = downloadLimit
@@ -133,9 +163,15 @@ class Spider():
                 parsed = self.rules[pattern](url, html)
                 if parsed:
                     if type(parsed) == dict:
-                        self.data.append(parsed)
+                        self.addData([parsed])
                     elif type(parsed) == list:
-                        self.data += parsed
+                        self.addData(parsed)
+
+    def addData(self, dataList):
+        if self.addDataHandler == None:
+            self.data += dataList
+        else:
+            self.addDataHandler(dataList)
 
     def loop(self):
         counter = 0
@@ -173,11 +209,42 @@ class Spider():
             dict_writer.writeheader()
             dict_writer.writerows(self.data)
 
+    def dbConnect(self):
+        self.client = MongoClient(self.connectionString)
+        self.db = self.client[self.dbName]
+
+    ## 1
     def saveData(self):
         if len(self.data) == 0:
             return
+        self.db.vacancies.insert_many(self.data)
 
+    ## 2
+    def printVacancies(self, criteria):
+        cursor = self.db.vacancies.find(criteria)
+        for vacancy in cursor:
+            print(vacancy['id'], vacancy['name'], vacancy['link'], vacancy['min'], vacancy['max'])
 
+    ## 3
+    def addDataDB(self, dataList):
+        for vacancy in dataList:
+            if self.db.vacancies.find({'id': vacancy['id']}).count() > 0:
+                self.log('Update ' + vacancy['id'])
+                self.db.vacancies.update(
+                    {
+                        'id': vacancy['id']
+                    },
+                    {
+                        '$set': {
+                            'min': vacancy['min'],
+                            'max': vacancy['max'],
+                            'name': vacancy['name'],
+                            'link': vacancy['link']
+                        }
+                    }, upsert=False, multi=False)
+            else:
+                self.log('Insert ' + vacancy['id'])
+                self.db.vacancies.insert(vacancy)
 
 
 if __name__ == '__main__':
@@ -219,7 +286,14 @@ if __name__ == '__main__':
         parser=sjSearchParser
     )
 
-    spider.setDownloadLimit(200)
+    spider.setDownloadLimit(1000)
+
+    spider.dbConnect()
+
+    spider.setDataHandler(spider.addDataDB)
 
     spider.loop()
-    spider.dumpData('vacancies.csv')
+    # spider.dumpData('vacancies.csv')
+
+    # spider.saveData()
+    # spider.printVacancies({"max": {"$gt": 200000}})
