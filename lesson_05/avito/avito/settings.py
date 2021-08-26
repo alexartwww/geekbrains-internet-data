@@ -1,4 +1,4 @@
-# Scrapy settings for jobs project
+# Scrapy settings for avito project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -7,25 +7,33 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'jobs'
+BOT_NAME = 'avito'
 
-SPIDER_MODULES = ['jobs.spiders']
-NEWSPIDER_MODULE = 'jobs.spiders'
+SPIDER_MODULES = ['avito.spiders']
+NEWSPIDER_MODULE = 'avito.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36'
+#USER_AGENT = 'avito (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
-
-
 LOG_ENABLED = True
-LOG_LEVEL = 'DEBUG'  #INFO ERROR
+LOG_LEVEL = 'DEBUG'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36'
+
+CONCURRENT_REQUESTS = 16
+DOWNLOAD_DELAY = 3
+CONCURRENT_REQUESTS_PER_DOMAIN = 8
+CONCURRENT_REQUESTS_PER_IP = 8
+
+IMAGES_STORE = 'images'
 
 ITEM_PIPELINES = {
-   'jobs.pipelines.JobsPipeline': 100,
+   'avito.pipelines.DataBasePipeline': 300,
+   'avito.pipelines.AvitoPhotosPipeline': 200,
 }
+
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -53,13 +61,13 @@ ITEM_PIPELINES = {
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'jobs.middlewares.JobsSpiderMiddleware': 543,
+#    'avito.middlewares.AvitoSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'jobs.middlewares.JobsDownloaderMiddleware': 543,
+#    'avito.middlewares.AvitoDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -71,7 +79,7 @@ ITEM_PIPELINES = {
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'jobs.pipelines.JobsPipeline': 300,
+#    'avito.pipelines.AvitoPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)

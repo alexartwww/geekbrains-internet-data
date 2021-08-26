@@ -1,6 +1,6 @@
 import scrapy
 from scrapy.http import HtmlResponse
-from jobs.items import JobparserItem
+from jobs.items import JobsItem
 
 
 class HhruSpider(scrapy.Spider):
@@ -9,7 +9,7 @@ class HhruSpider(scrapy.Spider):
     start_urls = ['https://izhevsk.hh.ru/search/vacancy?area=&st=searchVacancy&text=python']
 
     def parse(self, response: HtmlResponse, **kwargs):
-        next_page = response.css('a.HH-Pager-Controls-Next::attr(href)').extract_first()
+        next_page = response.css('a.bloko-button[data-qa="pager-next"]::attr(href)').extract_first()
         yield response.follow(next_page, callback=self.parse)
         vacansy = response.css(
             'div.vacancy-serp div.vacancy-serp-item div.vacancy-serp-item__row_header a.bloko-link::attr(href)'
@@ -18,7 +18,6 @@ class HhruSpider(scrapy.Spider):
             yield response.follow(link, callback=self.vacansy_parse)
 
     def vacansy_parse(self, response: HtmlResponse):
-        name = response.css('div.vacancy-title h1.header::text').extract_first()
-        salary = response.css('div.vacancy-title p.vacancy-salary::text').extract()
-        # print(name, salary)
-        yield JobparserItem(name=name, salary=salary)
+        name = response.css('div.vacancy-title h1.bloko-header-1::text').extract_first()
+        salary = response.css('div.vacancy-title p.vacancy-salary span.bloko-header-2::text').extract()
+        yield JobsItem(name=name, salary=salary)

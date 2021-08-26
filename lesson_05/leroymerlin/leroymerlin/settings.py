@@ -1,4 +1,4 @@
-# Scrapy settings for jobs project
+# Scrapy settings for leroymerlin project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -7,10 +7,10 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'jobs'
+BOT_NAME = 'leroymerlin'
 
-SPIDER_MODULES = ['jobs.spiders']
-NEWSPIDER_MODULE = 'jobs.spiders'
+SPIDER_MODULES = ['leroymerlin.spiders']
+NEWSPIDER_MODULE = 'leroymerlin.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -19,12 +19,14 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 
+IMAGES_STORE = 'images'
 
 LOG_ENABLED = True
 LOG_LEVEL = 'DEBUG'  #INFO ERROR
 
 ITEM_PIPELINES = {
-   'jobs.pipelines.JobsPipeline': 100,
+   'leroymerlin.pipelines.LeroymerlinPipeline': 300,
+   # 'leroymerlin.pipelines.LeroymerlinPhotosPipeline': 200,
 }
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
@@ -53,13 +55,13 @@ ITEM_PIPELINES = {
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'jobs.middlewares.JobsSpiderMiddleware': 543,
+#    'leroymerlin.middlewares.LeroymerlinSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'jobs.middlewares.JobsDownloaderMiddleware': 543,
+#    'leroymerlin.middlewares.LeroymerlinDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -71,7 +73,7 @@ ITEM_PIPELINES = {
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'jobs.pipelines.JobsPipeline': 300,
+#    'leroymerlin.pipelines.LeroymerlinPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)

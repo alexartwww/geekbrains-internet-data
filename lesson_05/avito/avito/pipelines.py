@@ -5,13 +5,12 @@
 
 
 # useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
 import scrapy
+from scrapy.pipelines.images import ImagesPipeline
 from pymongo import MongoClient
 
 
-class JobsPipeline(object):
-
+class DataBasePipeline(object):
     def open_spider(self, spider):
         self.client = MongoClient('mongodb://root:eeB5vu7aaiwie9Wo@127.0.0.1:27117')
         self.mongobase = self.client.geekbrains
@@ -23,6 +22,20 @@ class JobsPipeline(object):
 
         collection = self.mongobase[spider.name]
         collection.insert_one(item)
-        print(item['salary'])
+        return item
+
+
+class AvitoPhotosPipeline(ImagesPipeline):
+    def get_media_requests(self, item, info):
+        if item['photos']:
+            for img in item['photos']:
+                try:
+                    yield scrapy.Request(f'http:{img}')
+                except Exception as e:
+                    print(e)
+
+        def item_completed(self, results, item, info):
+            if results:
+                item['photos'] = [itm[1] for itm in results if itm[0]]
 
         return item

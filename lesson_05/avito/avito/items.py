@@ -6,8 +6,8 @@
 import scrapy
 
 
-class JobsItem(scrapy.Item):
-    # define the fields for your item here like:
+class AvitoItem(scrapy.Item):
     _id = scrapy.Field()
     name = scrapy.Field()
-    salary = scrapy.Field()
+    photos = scrapy.Field()
+    price = scrapy.Field()
