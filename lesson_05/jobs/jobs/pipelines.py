@@ -20,9 +20,35 @@ class JobsPipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
-
-        collection = self.mongobase[spider.name]
-        collection.insert_one(item)
-        print(item['salary'])
+        collection = self.mongobase['jobs']
+        if collection.find({'code': item['code']}).count() > 0:
+            to_update = {}
+            keys_to_update = [
+                'updated',
+                'datetime',
+                'name',
+                'compensation',
+                'min',
+                'max',
+                'currency',
+                'tax',
+                'address',
+                'experience',
+                'timetype',
+                'placetype',
+                'company',
+                'description',
+                'keys'
+            ]
+            for key in keys_to_update:
+                if key in item:
+                    to_update[key] = item[key]
+            collection.update(
+                {'code': item['code']},
+                {'$set': to_update},
+                upsert=False,
+                multi=False)
+        else:
+            collection.insert(item)
 
         return item

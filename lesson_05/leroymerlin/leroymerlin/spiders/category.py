@@ -40,17 +40,6 @@ class CategorySpider(scrapy.Spider):
 
         photos = response.css('uc-pdp-media-carousel picture source::attr(srcset)').extract()
 
-        # item = LeroymerlinItem(
-        #     url=response.url,
-        #     brand=brand,
-        #     name=name,
-        #     price=price,
-        #     currency=currency,
-        #     articul=articul,
-        #     description=description,
-        #     characteristics=characteristics,
-        #     photos=photos
-        # )
         loader = ItemLoader(item=LeroymerlinItem())
         loader.add_value('url', response.url)
         loader.add_value('brand', brand)
